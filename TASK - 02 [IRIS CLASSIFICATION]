@@ -1,0 +1,107 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+import joblib
+from tabulate import tabulate
+
+# Loading Dataset
+
+iris_data=pd.read_csv('IRIS.csv')
+
+# Separating features (X) and target variable (y)
+
+X = iris_data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
+y = iris_data['species']
+
+# Split the dataset into training and testing sets
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+iris_data.head()
+
+# Training a Decision Tree classifier
+
+model = DecisionTreeClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+# Getting input values from the user
+
+input_sepal_length = float(input("Enter the sepal length: "))
+input_sepal_width = float(input("Enter the sepal width: "))
+input_petal_length = float(input("Enter the petal length: "))
+input_petal_width = float(input("Enter the petal width: "))
+
+# Creating a DataFrame with user-inputted values
+
+user_input = pd.DataFrame({
+    'sepal_length': [input_sepal_length],
+    'sepal_width': [input_sepal_width],
+    'petal_length': [input_petal_length],
+    'petal_width': [input_petal_width]
+})
+
+# Making predictions using the user-inputted values
+
+predicted_species = model.predict(user_input)
+
+# Printing the predicted species
+
+print(f"The predicted species is: {predicted_species[0]}")
+
+
+# Calculate the accuracy of the model on the test set
+y_pred_test = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred_test)
+accuracy_percentage = accuracy * 100
+
+# Print the accuracy
+print(f"Model Accuracy on Test Set: {accuracy_percentage:.2f}%")
+
+# Create a bar graph based on the number of each species in the dataset
+
+species_counts = iris_data['species'].value_counts()
+sorted_species_counts = species_counts.sort_values(ascending=False)
+# Assign colors based on the count order
+colors = ['darkblue', 'lightblue', 'blue']
+
+# Create a pie chart
+plt.subplot(1, 2, 2)
+plt.pie(sorted_species_counts, labels=sorted_species_counts.index, autopct='%1.1f%%', colors=colors, startangle=90)
+plt.title(f'Species Distribution\n(Model Accuracy: {accuracy_percentage:.2f}%)')
+plt.show()
+
+# Get input values from the user
+input_species = input("Enter the species name: ")
+
+# Make predictions using the user-inputted species
+user_input = pd.DataFrame({
+    'sepal_length': [0],  # Add dummy value, as the specific length is not provided
+    'sepal_width': [0],   # Add dummy value
+    'petal_length': [0],  # Add dummy value
+    'petal_width': [0]    # Add dummy value
+})
+predicted_species = model.predict(user_input)
+
+# Check if any data is found for the specified species
+predicted_data = iris_data[iris_data['species'] == input_species]
+
+if predicted_data.empty:
+    print(f"No data found for the predicted species: {input_species}")
+else:
+    # Calculate average values for each feature
+    average_values = predicted_data.groupby('species').mean()
+
+    # Print the result in a formatted table
+    print(f"\nAverage values for predicted species {input_species}:\n")
+    print(tabulate(average_values[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']], headers='keys', tablefmt='pretty'))
+
+    # Calculate average values for each feature
+    average_values = predicted_data.groupby('species').mean()
+
+    # Plot the average values as a bar chart
+    average_values.transpose().plot(kind='bar', rot=0, colormap='viridis')
+    plt.title(f"Average Values for Predicted Species: {input_species}")
+    plt.xlabel("Feature")
+    plt.ylabel("Average Value")
+    plt.show()
